@@ -13,46 +13,55 @@ Before setting up the project, ensure you have the following installed:
 ## Setup Instructions
 
 1. **Clone the repository:**
-   ```bash
+   ```
    git clone https://github.com/your-username/project-name.git
    cd laravuejs
+   ```
 
    2. **Install PHP dependencies:**
+```
 composer install
-
+```
 
 3. **Install Node.js dependencies:**
+```
 npm install
-
+```
 
 4. **Install Vue.js and related dependencies:**
+```
 npm install vue@next vue-loader@^17.0.0
-
+```
 
 5. **Install Vue Router and Vuex (for state management):**
+```
 npm install vue-router@4 vuex@4
-
+```
 
 6. **Create a copy of the .env.example file and rename it to .env:**
+```
 cp .env.example .env
-
+```
 
 7. **Generate an application key:**
+```
 php artisan key:generate
-
+```
 
 8. **Configure your database in the .env file:**
+```
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=your_database_name
 DB_USERNAME=your_database_username
 DB_PASSWORD=your_database_password
-
+```
 
 9. **Run database migrations:**
+```
 php artisan migrate
-
+```
 
 10. **Start the Laravel development server:**
  ```
@@ -69,12 +78,14 @@ php artisan migrate
 ## Running the Application
 
 - **Start the Laravel development server:**
+```
 php artisan serve
-
+```
 
 - **Start the Vite development server:**
+```
 npm run dev
-
+```
 
 - **Access the application at http://localhost:8000**
 
