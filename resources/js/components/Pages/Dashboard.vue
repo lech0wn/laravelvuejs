@@ -1,237 +1,322 @@
 <template>
-    <div>
-      <div class="flex items-center mb-4">
-        <select v-model="filter" class="mr-4"> <!-- Filter Dropdown -->
-          <option value="">Select Filter</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-        <input v-model="search" placeholder="Search Users" class="mr-4" />
-        <button @click="showAddUser = true">Add User +</button>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">Boilerplate</div>
+      <nav class="nav">
+        <ul>
+          <li class="nav-item active">
+            <i class="fas fa-users"></i>
+            <span>Users</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-comments"></i>
+            <span>Chat</span>
+          </li>
+        </ul>
+      </nav>
+      <div class="logout">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
       </div>
-      <table>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="profile">
+          <i class="fas fa-user-circle"></i>
+          <span>Welcome, User Name</span>
+        </div>
+      </div>
+
+      <!-- Content Header -->
+      <div class="content-header">
+        <h1>Users</h1>
+        <div class="actions">
+          <select v-model="filter" class="filter-select" @change="fetchUsers">
+            <option value="">Select Filter</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <input
+            v-model="search"
+            placeholder="Search Users"
+            class="search-input"
+            @input="fetchUsers"
+          />
+          <button class="add-user-btn">
+            <i class="fas fa-plus"></i> Add User
+          </button>
+        </div>
+      </div>
+
+      <!-- User Table -->
+      <table class="users-table">
         <thead>
           <tr>
-            <th>Name</th><th>Email</th><th>Last Active</th><th>Status</th><th></th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Last Active</th>
+            <th>Status</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="user in users" :key="user.id">
             <td>{{ user.name }}</td>
             <td>{{ user.email }}</td>
-            <td>{{ user.last_active }}</td>
+            <td>{{ user.lastActive }}</td>
             <td>
-              <span :class="user.status === 'active' ? 'text-green-500' : 'text-red-500'">
-                ●
-              </span>
+              <span
+                :class="user.status === 'active' ? 'status-dot active' : 'status-dot inactive'"
+              ></span>
               {{ user.status.charAt(0).toUpperCase() + user.status.slice(1) }}
             </td>
             <td>...</td>
           </tr>
         </tbody>
       </table>
+
       <!-- Pagination -->
       <div class="pagination">
         <button @click="prevPage" :disabled="page === 1">←</button>
-        <button v-for="n in totalPages" :key="n" @click="goToPage(n)">{{ n }}</button>
+        <button
+          v-for="n in totalPages"
+          :key="n"
+          @click="goToPage(n)"
+          :class="{ active: page === n }"
+        >
+          {{ n }}
+        </button>
         <button @click="nextPage" :disabled="page === totalPages">→</button>
       </div>
-      <!-- Add User Modal -->
-      <add-user-modal v-if="showAddUser" @close="showAddUser = false" />
     </div>
-  </template>
+  </div>
+</template>
 
-  <script setup>
-  import { ref, onMounted } from 'vue'
-  import axios from 'axios'
-//   import AddUserModal from './AddUserModal.vue'
+<script setup>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
-  const users = ref([])
-  const filter = ref('')
-  const search = ref('')
-  const page = ref(1)
-  const totalPages = ref(5)
-  const showAddUser = ref(false)
+// State variables
+const users = ref([]);
+const filter = ref('');
+const search = ref('');
+const page = ref(1);
+const totalPages = ref(1);
 
-  const fetchUsers = async () => {
-    // Call your Laravel API here
-    // Example: /api/users?filter=active&search=John&page=1
+// Fetch users from the API
+const fetchUsers = async () => {
+  try {
     const response = await axios.get('/api/users', {
-      params: { filter: filter.value, search: search.value, page: page.value }
-    })
-    users.value = response.data.data
-    totalPages.value = response.data.last_page
-  }
+      params: {
+        filter: filter.value,
+        search: search.value,
+        page: page.value,
+      },
+    });
 
-  onMounted(fetchUsers)
-  </script>
+    // Update users and pagination data
+    users.value = response.data.data;
+    totalPages.value = response.data.last_page;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+};
+
+// Pagination methods
+const prevPage = () => {
+  if (page.value > 1) {
+    page.value--;
+    fetchUsers();
+  }
+};
+
+const nextPage = () => {
+  if (page.value < totalPages.value) {
+    page.value++;
+    fetchUsers();
+  }
+};
+
+const goToPage = (n) => {
+  page.value = n;
+  fetchUsers();
+};
+
+// Fetch users on component mount
+onMounted(fetchUsers);
+</script>
 
 <style scoped>
+/* General Styles */
 body {
   font-family: 'Inter', Arial, sans-serif;
-  background: #f5f6fa;
   margin: 0;
-  color: #22223b;
+  padding: 0;
+  background-color: #f5f6fa;
+  color: #333;
 }
 
 .dashboard-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
 }
 
+/* Sidebar */
 .sidebar {
-  width: 220px;
-  background: #22223b;
-  color: #fff;
+  font-family: 'Inter', Arial, sans-serif;
+  width: 250px;
+  background-color: #2c3e50;
+  color: white;
   display: flex;
   flex-direction: column;
-  padding: 32px 0;
+  padding: 20px 0;
 }
 
-.sidebar .logo {
+.logo {
   font-size: 1.5rem;
   font-weight: bold;
-  margin-bottom: 40px;
   text-align: center;
-  letter-spacing: 2px;
+  margin-bottom: 20px;
 }
 
-.sidebar .nav {
+.nav {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
 }
 
-.sidebar .nav-item {
+.nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
   display: flex;
   align-items: center;
-  padding: 12px 32px;
+  padding: 15px 20px;
   cursor: pointer;
-  transition: background 0.2s;
-  font-size: 1.1rem;
+  transition: background-color 0.3s;
 }
 
-.sidebar .nav-item.active,
-.sidebar .nav-item:hover {
-  background: #4a4e69;
-  border-left: 4px solid #f2e9e4;
+.nav-item i {
+  margin-right: 10px;
 }
 
-.sidebar .nav-item i {
-  margin-right: 16px;
-  font-size: 1.2rem;
+.nav-item:hover,
+.nav-item.active {
+  background-color: #34495e;
 }
 
-.sidebar .logout {
-  margin-top: auto;
-  padding: 12px 32px;
-  color: #f2e9e4;
+.logout {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
   cursor: pointer;
-  border-top: 1px solid #4a4e69;
+  border-top: 1px solid #34495e;
 }
 
+.logout i {
+  margin-right: 10px;
+}
+
+/* Main Content */
 .main-content {
+    font-family: 'Inter', Arial, sans-serif;
   flex: 1;
-  padding: 40px 48px;
-  background: #f5f6fa;
   display: flex;
   flex-direction: column;
+  padding: 20px;
 }
 
 .topbar {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .topbar .profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.topbar .profile-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #c9ada7;
-  object-fit: cover;
-}
-
-.topbar .welcome {
+  gap: 10px;
   font-size: 1rem;
-  color: #4a4e69;
+  color: #555;
 }
 
-.header-row {
+.content-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.header-row .title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #22223b;
+.content-header h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
 }
 
-.header-row .actions {
+.actions {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 10px;
 }
 
 .filter-select,
 .search-input {
   padding: 8px 12px;
-  border: 1px solid #c9ada7;
-  border-radius: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   font-size: 1rem;
-  background: #fff;
-  outline: none;
 }
 
 .add-user-btn {
-  background: #4a4e69;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #007bff;
+  color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 1rem;
+  padding: 8px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background 0.2s;
+  font-size: 1rem;
 }
 
 .add-user-btn:hover {
-  background: #22223b;
+  background-color: #0056b3;
 }
 
+/* Table */
 .users-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border-radius: 12px;
+  background-color: white;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(34, 34, 59, 0.04);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .users-table th,
 .users-table td {
-  padding: 16px 12px;
+  padding: 12px 15px;
   text-align: left;
 }
 
 .users-table th {
-  background: #f2e9e4;
-  color: #22223b;
-  font-weight: 600;
-  font-size: 1rem;
+  background-color: #f2f2f2;
+  font-weight: bold;
 }
 
 .users-table tr:not(:last-child) {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #ddd;
 }
 
 .status-dot {
@@ -243,40 +328,42 @@ body {
 }
 
 .status-dot.active {
-  background: #4caf50;
+  background-color: #28a745;
 }
 
 .status-dot.inactive {
-  background: #e63946;
+  background-color: #dc3545;
 }
 
-.actions-cell {
-  text-align: right;
-}
-
+/* Pagination */
 .pagination {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
-  margin-top: 24px;
+  gap: 5px;
+  margin-top: 20px;
 }
 
 .pagination button {
-  background: #fff;
-  border: 1px solid #c9ada7;
-  color: #22223b;
-  padding: 6px 12px;
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
-.pagination button.active,
 .pagination button:hover {
-  background: #4a4e69;
-  color: #fff;
-  border-color: #4a4e69;
+  background-color: #007bff;
+  color: white;
 }
 
+.pagination button:disabled {
+  background-color: #f2f2f2;
+  cursor: not-allowed;
+}
+
+.pagination button.active {
+  background-color: #007bff;
+  color: white;
+}
 </style>
