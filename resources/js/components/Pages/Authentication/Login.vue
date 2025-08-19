@@ -43,21 +43,34 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { login as loginApi, setAuthToken } from '../../../services/api'
+
+const router = useRouter()
 
 const email = ref('')
 const password = ref('')
 const error = ref('')
 
-function handleLogin() {
+async function handleLogin() {
   error.value = ''
   if (!email.value || !password.value) {
     error.value = 'Please enter both email and password.'
     return
   }
-  if (email.value === 'test@example.com' && password.value === 'password') {
+
+  try {
+    const { data } = await loginApi({ email: email.value, password: password.value })
+
+    // Persist token and user; set auth header for future requests
+    localStorage.setItem('authToken', data.token)
+    localStorage.setItem('authUser', JSON.stringify(data.user))
+    setAuthToken(data.token)
+
     alert('Login successful!')
-  } else {
-    error.value = 'Invalid credentials.'
+    router.push('/dashboard')
+  } catch (e) {
+    error.value = e?.response?.data?.message || 'Invalid credentials.'
   }
 }
 </script>

@@ -40,6 +40,10 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { register as registerApi } from '../../../services/api'
+
+const router = useRouter()
 
 const firstName = ref('')
 const middleName = ref('')
@@ -48,14 +52,27 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 
-function handleRegister() {
+async function handleRegister() {
   error.value = ''
   if (!firstName.value || !lastName.value || !email.value || !password.value) {
     error.value = 'Please fill in all required fields.'
     return
   }
-  // Registration logic here
-  alert('Registration successful!')
+
+  try {
+    await registerApi({
+      firstname: firstName.value,
+      middlename: middleName.value || null,
+      lastname: lastName.value,
+      email: email.value,
+      password: password.value,
+    })
+
+    alert('Registration successful!')
+    router.push('/login')
+  } catch (e) {
+    error.value = e?.response?.data?.message || 'Registration failed. Please try again.'
+  }
 }
 </script>
 
